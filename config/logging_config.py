@@ -68,6 +68,9 @@ log_config = {
 
 # 配置日志
 dictConfig(log_config)
+logging.getLogger("httpx").setLevel(logging.WARNING)  # 设置 httpx 的日志级别为 WARNING
+logging.getLogger("asyncio").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 # 获取控制台处理程序并应用自定义的彩色格式化器
 console_handler = logging.getLogger().handlers[0]

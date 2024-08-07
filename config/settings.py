@@ -1,4 +1,5 @@
 # config/settings.py
+from typing import Union
 
 from pydantic import AnyUrl
 from pydantic_settings import BaseSettings
@@ -6,7 +7,6 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # HTTP 请求相关配置
-    user_agent: str = "MyCrawler/1.0"
     request_timeout: int = 10  # 请求超时时间（秒）
 
     # 数据库相关配置
@@ -18,6 +18,9 @@ class Settings(BaseSettings):
 
     # 日志相关配置
     log_level: str = "INFO"
+
+    proxy_host: str|None = None
+    proxy_port: Union[str, int, list,None] = None
 
     # 可以从配置文件加载配置
     class Config:

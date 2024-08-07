@@ -7,3 +7,6 @@ requests
 beautifulsoup4
 tenacity
 pytest
+pytest-asyncio
+httpx
+loguru
