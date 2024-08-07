@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+colorama
+requests
+beautifulsoup4
+tenacity
+pytest
