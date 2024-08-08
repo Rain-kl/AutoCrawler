@@ -7,7 +7,7 @@ from typing import Union
 from loguru import logger as log_debug
 from tenacity import retry, stop_after_attempt, wait_fixed, before_sleep_log
 from .headers import generate_headers
-from .decorator import get_time
+from .decorator import cached_function
 from config.settings import settings
 from .logger import logger
 
@@ -64,8 +64,9 @@ class Requester:
         if self.client:
             await self.client.aclose()
 
-    @retry(stop=stop_after_attempt(5), wait=wait_fixed(3), before_sleep=before_sleep_log(logger, logging.INFO))
-    @get_time
+    # @retry(stop=stop_after_attempt(5), wait=wait_fixed(3), before_sleep=before_sleep_log(logger, logging.INFO))
+    @cached_function(timeout=60)
+    # @get_time
     async def send_request(self, url, method="GET", headers=None, params=None, data=None, json=None, encoding=None):
         try:
             if headers is None:
@@ -81,7 +82,8 @@ class Requester:
                 params=params,
                 data=data,
                 timeout=self.timeout,
-                json=json
+                json=json,
+                follow_redirects=True
             )
             if encoding:
                 response.encoding = encoding

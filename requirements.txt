@@ -13,3 +13,4 @@ loguru
 openai
 lxml
 chardet
+diskcache

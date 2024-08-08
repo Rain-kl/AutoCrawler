@@ -4,6 +4,17 @@ import os
 from .settings import settings
 from .colored_formatter import ColoredFormatter  # 导入自定义的彩色格式化器
 
+# 定义SUCCESS日志级别
+SUCCESS_LEVEL_NUM = 25
+logging.addLevelName(SUCCESS_LEVEL_NUM, "SUCCESS")
+
+
+def success(self, message, *args, **kws):
+    if self.isEnabledFor(SUCCESS_LEVEL_NUM):
+        self._log(SUCCESS_LEVEL_NUM, message, args, **kws)
+
+
+logging.Logger.success = success
 # 确保日志目录存在，否则创建该目录
 log_directory = "logs"
 if not os.path.exists(log_directory):

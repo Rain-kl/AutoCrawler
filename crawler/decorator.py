@@ -1,8 +1,46 @@
 import asyncio
+import inspect
 from functools import wraps
 from time import perf_counter
 from typing import Any, Callable
-from loguru import logger
+
+import diskcache
+from config.logging_config import logger
+
+
+cache = diskcache.Cache('my_cache')
+
+
+# 创建一个缓存装饰器
+def cached_function(timeout):
+    def decorator(func):
+        if inspect.iscoroutinefunction(func):
+            async def async_wrapper(self, *args, **kwargs):
+                key = f'{func.__name__}:{args}:{kwargs}'
+                # print(key)
+                result = cache.get(key)
+                if result is None:
+                    result = await func(self, *args, **kwargs)
+                    cache.set(key, result, expire=timeout)
+                else:
+                    logger.success(f'cache hit: {key}')
+                return result
+
+            return async_wrapper
+        else:
+            def wrapper(self, *args, **kwargs):
+                key = f'{func.__name__}:{args}:{kwargs}'
+                result = cache.get(key)
+                if result is None:
+                    result = func(self, *args, **kwargs)
+                    cache.set(key, result, expire=timeout)
+                else:
+                    logger.success(f'cache hit: {key}')
+                return result
+
+            return wrapper
+
+    return decorator
 
 
 def get_time(func: Callable) -> Callable:

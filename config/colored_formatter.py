@@ -15,6 +15,7 @@ class ColoredFormatter(logging.Formatter):
             logging.CRITICAL: Fore.RED + Style.BRIGHT + fmt + Style.RESET_ALL,
         }
 
+
     def format(self, record):
         log_fmt = self.FORMATS.get(record.levelno)
         formatter = logging.Formatter(log_fmt, self.datefmt)
