@@ -2,7 +2,7 @@ from openai import OpenAI
 import os
 from config.settings import settings
 
-if settings.proxy_host is not None:
+if settings.llm_enable_proxy:
     os.environ["http_proxy"] = f"http://{settings.proxy_host}:{settings.proxy_port}"
     os.environ["https_proxy"] = f"http://{settings.proxy_host}:{settings.proxy_port}"
 
@@ -43,7 +43,7 @@ class OpenAICore:
         self.base_url = settings.llm_base_url
         self.api_key = settings.llm_api_key
 
-    def analyze_website(self, prompt_generator: Prompt,stream=False):
+    def analyze_website(self, prompt_generator: Prompt, stream=False):
         client = OpenAI(
             base_url=self.base_url,
             api_key=self.api_key,
@@ -67,5 +67,3 @@ class OpenAICore:
 def response_stream(openai_response):
     for message in openai_response:
         print(message.choices[0].delta.content, end='')
-
-

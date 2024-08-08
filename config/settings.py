@@ -1,11 +1,18 @@
 # config/settings.py
-from typing import Union
+import inspect
 
+from typing import Union
 from pydantic import AnyUrl
 from pydantic_settings import BaseSettings
+import plugins.plugin_settings
+
+plugin_settings_classes = [
+    cls for name, cls in inspect.getmembers(plugins.plugin_settings, inspect.isclass)
+    if cls.__module__ == plugins.plugin_settings.__name__
+]  # 获取插件配置类
 
 
-class Settings(BaseSettings):
+class Settings(BaseSettings, *plugin_settings_classes):
     # HTTP 请求相关配置
     request_timeout: int = 10  # 请求超时时间（秒）
 
@@ -22,12 +29,6 @@ class Settings(BaseSettings):
     # 代理相关配置
     proxy_host: str | None = None
     proxy_port: Union[str, int, list, None] = None
-
-    # ai相关配置
-    llm_type: str = "openai"
-    llm_model: str = "gpt-4o"
-    llm_base_url: str = "https://api.openai.com/v1"
-    llm_api_key: str = "your-api-key"
 
     # 可以从配置文件加载配置
     class Config:
