@@ -8,6 +8,7 @@ from config.logging_config import logger
 
 warnings.filterwarnings("ignore", category=UserWarning, message=".*cyfunction Element.*")
 default_ignore_elements = ['script', 'style', 'meta', 'head', 'link']
+default_target_tag_attribute = ['href', 'src']
 
 
 class HTMLStructureModel(BaseModel):
@@ -21,21 +22,22 @@ class HTMLStructureModel(BaseModel):
     text: str
     element: SkipValidation[etree.Element]
     children: list  # List of TagDetails
+
     class Config:
         arbitrary_types_allowed = True
 
-
-    def extract_all_url(self, ignore_elements: list = None):
+    def extract_all_url(self, target_tag_attribute: list = None, ignore_elements: list = None, ):
+        if target_tag_attribute is None:
+            target_tag_attribute = default_target_tag_attribute
         if ignore_elements is None:
             ignore_elements = default_ignore_elements
 
         def bfs(node: HTMLStructureModel):
             urls = []
-            target_tag_attribute = ['href', 'src']
             queue = [node]
             while queue:
                 current = queue.pop(0)
-                if current.num_url == 0:
+                if current.num_url == 0 and target_tag_attribute == default_target_tag_attribute:
                     continue
                 for child in current.children:
                     if child.tag in ignore_elements:
@@ -172,7 +174,7 @@ class AutoParser:
             url_num_limit: list = None,
             text_num_limit: list = None,
             children_len_limit: list = None,
-            sort_func: callable = lambda x: x.num_text,
+            # sort_func: callable = lambda x: x.num_text,
             extract_first: bool = False
     ) -> Union[HTMLStructureModel, List[HTMLStructureModel]]:
         def bfs(node: HTMLStructureModel):
@@ -196,11 +198,12 @@ class AutoParser:
                 for child in current.children:
                     queue.append(child)
 
-            if sort_func:
-                matched = sorted(matched, key=sort_func, reverse=True)
+            # if sort_func:
+            #     matched = sorted(matched, key=sort_func, reverse=True)
 
             if extract_first:
-                return matched[0] if matched else None
+                return matched if isinstance(matched[0], HTMLStructureModel) else matched[0][0]
+
             return matched
 
         bfs_matched = bfs(self.structure)  # 找到所有匹配的元素

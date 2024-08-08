@@ -46,10 +46,10 @@ if __name__ == '__main__':
     with open('../test.html', 'r') as f:
         sample_html = f.read()
 
-    parser = Parser(sample_html)
-    html_struct = parser.html.extract_structure()
+    p = Parser(sample_html)
+    html_struct = p.html.extract_structure()
     # max_node = parser.html.find_maximum()
-    max_node = parser.html.find(tag='div')
+    max_node = p.html.find(tag='div')
     # output:
     # print(html_struct.model_dump_json(indent=2))
     print(max_node)
