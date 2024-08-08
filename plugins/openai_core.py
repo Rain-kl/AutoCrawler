@@ -42,6 +42,9 @@ class OpenAICore:
     def __init__(self):
         self.base_url = settings.llm_base_url
         self.api_key = settings.llm_api_key
+        self.llm_model = settings.llm_model
+        if settings.llm_type != "openai":
+            raise ValueError("llm_type must be openai in OpenAICore")
 
     def analyze_website(self, prompt_generator: Prompt, stream=False):
         client = OpenAI(
@@ -49,7 +52,7 @@ class OpenAICore:
             api_key=self.api_key,
         )
         chat_completion = client.chat.completions.create(
-            model=settings.llm_model,
+            model=self.llm_model,
             stream=stream,
             temperature=0.4,
             response_format={"type": "json_object"},

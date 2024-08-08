@@ -1,9 +1,8 @@
 # crawler/parser.py
+import math
 import httpx
+
 from plugins.auto_parser import AutoParser
-from lxml import etree
-from pydantic import BaseModel
-from config.logging_config import logger
 
 
 class Parser:
@@ -49,5 +48,15 @@ if __name__ == '__main__':
 
     parser = Parser(sample_html)
     html_struct = parser.html.extract_structure()
+    # max_node = parser.html.find_maximum()
+    max_node = parser.html.find(tag='div')
     # output:
-    print(html_struct.model_dump_json(indent=2))
+    # print(html_struct.model_dump_json(indent=2))
+    print(max_node)
+    for node in max_node:
+        print("output: ", end='')
+        print(node)
+
+
+    # print(max_node.extract_all_text(ignore_elements=['dt']))
+    # print(len(max_node.extract_all_url()))

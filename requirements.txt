@@ -12,3 +12,4 @@ httpx
 loguru
 openai
 lxml
+chardet

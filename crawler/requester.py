@@ -1,11 +1,11 @@
 # crawler/requester.py
 import httpx
+import chardet
 import random
 import logging
 from typing import Union
 from loguru import logger as log_debug
 from tenacity import retry, stop_after_attempt, wait_fixed, before_sleep_log
-
 from .headers import generate_headers
 from .decorator import get_time
 from config.settings import settings
@@ -66,7 +66,7 @@ class Requester:
 
     @retry(stop=stop_after_attempt(5), wait=wait_fixed(3), before_sleep=before_sleep_log(logger, logging.INFO))
     @get_time
-    async def send_request(self, url, method="GET", headers=None, params=None, data=None, json=None):
+    async def send_request(self, url, method="GET", headers=None, params=None, data=None, json=None, encoding=None):
         try:
             if headers is None:
                 headers = self.headers
@@ -83,6 +83,12 @@ class Requester:
                 timeout=self.timeout,
                 json=json
             )
+            if encoding:
+                response.encoding = encoding
+            else:
+                detected_encoding = chardet.detect(response.content)['encoding']
+                response.encoding = detected_encoding if detected_encoding else 'utf-8'
+
             response.raise_for_status()
             return response
         except Exception as e:
@@ -90,5 +96,6 @@ class Requester:
             log_debug.trace(e)
             await self.update_client()
             raise
+
 
 requester = Requester()
