@@ -10,3 +10,5 @@ pytest
 pytest-asyncio
 httpx
 loguru
+openai
+lxml

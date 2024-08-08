@@ -6,26 +6,25 @@ from .parser import parser
 
 
 class WorkflowEngine:
-    def __init__(self, start_url, page_limit=10):
+    def __init__(
+            self,
+            start_url="/book/166492/",
+            target_path="/book/166492/.*html",
+            target_type="text",
+            path_to_target="/book/166492/.*html|/book/166492 -> /book/166492/.*html"
+    ):
         self.start_url = start_url
-        self.page_limit = page_limit
+        self.target_path = target_path
+        self.target_type = target_type
+        self.path_to_target = path_to_target
         self.visited = set()
         self.to_visit = [start_url]
 
     def start_workflow(self):
-        while self.to_visit and len(self.visited) < self.page_limit:
-            url = self.to_visit.pop(0)
-            if url not in self.visited:
-                self.process_page(url)
+        pass
 
-    def process_page(self, url):
-        response = requester.send_request(url)
-        if response:
-            soup = parser.parse_html(response.content)
-            links = parser.extract_links(soup)
-            self.to_visit.extend(links)
-            self.visited.add(url)
-            self.handle_data(soup)
+    def parse_directory_page(self, url):
+        pass
 
     def handle_data(self, soup):
         # 用户可以在这里添加数据处理逻辑

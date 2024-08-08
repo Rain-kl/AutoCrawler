@@ -19,8 +19,15 @@ class Settings(BaseSettings):
     # 日志相关配置
     log_level: str = "INFO"
 
-    proxy_host: str|None = None
-    proxy_port: Union[str, int, list,None] = None
+    # 代理相关配置
+    proxy_host: str | None = None
+    proxy_port: Union[str, int, list, None] = None
+
+    # ai相关配置
+    llm_type: str = "openai"
+    llm_model: str = "gpt-4o"
+    llm_base_url: str = "https://api.openai.com/v1"
+    llm_api_key: str = "your-api-key"
 
     # 可以从配置文件加载配置
     class Config:

@@ -1,18 +1,53 @@
 # crawler/parser.py
-
-from bs4 import BeautifulSoup
+import httpx
+from plugins.auto_parser import AutoParser
+from lxml import etree
+from pydantic import BaseModel
+from config.logging_config import logger
 
 
 class Parser:
-    @staticmethod
-    def parse_html(html_content):
-        soup = BeautifulSoup(html_content, 'html.parser')
-        return soup
+    def __init__(self, date: httpx.Response | str | list | dict):
+        self.json_data: dict | list | None = None
+        self.response_text: str | None = None
 
-    @staticmethod
-    def extract_links(soup):
-        return [a['href'] for a in soup.find_all('a', href=True)]
+        if isinstance(date, httpx.Response):
+            assert date.status_code == 200, f"response status code is not 200, got {date.status_code}"
+            try:
+                self.json_data = date.json()
+            except:
+                self.response_text = date.text
+        if isinstance(date, str):
+            self.response_text = date
+
+        if isinstance(date, list) or isinstance(date, dict):
+            self.json_data = date
+
+        self.json = JsonParser(self.json_data)
+        self.html = HTMLParser(self.response_text)
 
 
-# 在项目中使用 Parser
-parser = Parser()
+class JsonParser:
+    def __init__(self, json_data: dict | list):
+        self.json_data = json_data
+
+    def your_method(self):
+        pass
+
+
+class HTMLParser(AutoParser):  # 使用AutoParser自动解析HTML
+    def __init__(self, html: str):
+        super().__init__(html)
+
+    def your_method(self):
+        pass
+
+
+if __name__ == '__main__':
+    with open('../test.html', 'r') as f:
+        sample_html = f.read()
+
+    parser = Parser(sample_html)
+    html_struct = parser.html.extract_structure()
+    # output:
+    print(html_struct.model_dump_json(indent=2))

@@ -90,3 +90,5 @@ class Requester:
             log_debug.trace(e)
             await self.update_client()
             raise
+
+requester = Requester()
