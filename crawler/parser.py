@@ -1,5 +1,4 @@
 # crawler/parser.py
-import math
 import httpx
 
 from plugins.auto_parser import AutoParser
@@ -22,8 +21,13 @@ class Parser:
         if isinstance(date, list) or isinstance(date, dict):
             self.json_data = date
 
-        self.json = JsonParser(self.json_data)
-        self.html = HTMLParser(self.response_text)
+    @property
+    def json(self):
+        return JsonParser(self.json_data)
+
+    @property
+    def html(self):
+        return HTMLParser(self.response_text)
 
 
 class JsonParser:
@@ -56,7 +60,6 @@ if __name__ == '__main__':
     for node in max_node:
         print("output: ", end='')
         print(node)
-
 
     # print(max_node.extract_all_text(ignore_elements=['dt']))
     # print(len(max_node.extract_all_url()))

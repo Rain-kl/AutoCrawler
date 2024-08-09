@@ -65,7 +65,7 @@ class Requester:
             await self.client.aclose()
 
     # @retry(stop=stop_after_attempt(5), wait=wait_fixed(3), before_sleep=before_sleep_log(logger, logging.INFO))
-    @cached_function(timeout=60)
+    @cached_function(timeout=600)
     # @get_time
     async def send_request(self, url, method="GET", headers=None, params=None, data=None, json=None, encoding=None):
         try:

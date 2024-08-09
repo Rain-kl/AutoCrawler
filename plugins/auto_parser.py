@@ -1,4 +1,5 @@
 # plugins/auto_parser.py
+import re
 import warnings
 from typing import Union, List
 
@@ -9,6 +10,11 @@ from config.logging_config import logger
 warnings.filterwarnings("ignore", category=UserWarning, message=".*cyfunction Element.*")
 default_ignore_elements = ['script', 'style', 'meta', 'head', 'link']
 default_target_tag_attribute = ['href', 'src']
+
+
+class URLModel(BaseModel):
+    text: str
+    url: str
 
 
 class HTMLStructureModel(BaseModel):
@@ -27,6 +33,12 @@ class HTMLStructureModel(BaseModel):
         arbitrary_types_allowed = True
 
     def extract_all_url(self, target_tag_attribute: list = None, ignore_elements: list = None, ):
+        """
+        提取当前标签及其子标签的所有链接
+        :param target_tag_attribute:
+        :param ignore_elements:
+        :return:
+        """
         if target_tag_attribute is None:
             target_tag_attribute = default_target_tag_attribute
         if ignore_elements is None:
@@ -37,23 +49,24 @@ class HTMLStructureModel(BaseModel):
             queue = [node]
             while queue:
                 current = queue.pop(0)
-                if current.num_url == 0 and target_tag_attribute == default_target_tag_attribute:
+                if current.tag not in ignore_elements:
+                    for attribute in current.attributes:
+                        if attribute in target_tag_attribute:
+                            urls.append(
+                                URLModel(text=current.text, url=current.attributes[attribute])
+                            )
+                if not current.children:
                     continue
                 for child in current.children:
                     if child.tag in ignore_elements:
                         continue
-                    for attribute in child.attributes:
-                        if attribute in target_tag_attribute:
-                            urls.append({
-                                'text': child.text,
-                                'url': child.attributes[attribute],
-                            })
                     queue.append(child)
             return urls
 
         return bfs(self)
 
-    def extract_all_text(self, ignore_elements: list = None):
+    def extract_all_text(self, ignore_elements=None):
+
         if ignore_elements is None:
             ignore_elements = default_ignore_elements
 
@@ -149,7 +162,8 @@ class AutoParser:
             html_content = etree.tostring(element, encoding=str, method='html')
             tree = html.fromstring(html_content)
             text = tree.xpath('string(.)').strip()
-            text = text.replace('\xa0\xa0', '\n')
+            text = text.replace('\xa0', '\n')
+            text = text.replace('\n\n', '\n')
         else:
             text = element.text if element.text else ""
 
@@ -169,12 +183,13 @@ class AutoParser:
     def find(
             self,
             tag: str,
+            by_regex: str = None,
             tag_attributes: dict = None,
             children_tag: list = None,
             url_num_limit: list = None,
             text_num_limit: list = None,
             children_len_limit: list = None,
-            # sort_func: callable = lambda x: x.num_text,
+            sort_func: callable = lambda x: x.num_text,
             extract_first: bool = False
     ) -> Union[HTMLStructureModel, List[HTMLStructureModel]]:
         def bfs(node: HTMLStructureModel):
@@ -198,8 +213,8 @@ class AutoParser:
                 for child in current.children:
                     queue.append(child)
 
-            # if sort_func:
-            #     matched = sorted(matched, key=sort_func, reverse=True)
+            if sort_func:
+                matched = sorted(matched, key=sort_func, reverse=True)
 
             if extract_first:
                 return matched if isinstance(matched[0], HTMLStructureModel) else matched[0][0]
@@ -209,36 +224,42 @@ class AutoParser:
         bfs_matched = bfs(self.structure)  # 找到所有匹配的元素
         remaining_elements = []
 
-        for elements in bfs_matched:  # 遍历所有匹配的元素
+        for current_tag in bfs_matched:  # 遍历所有匹配的元素
             if children_tag:  # 子节点标签要求
                 keep_element = True
-                for element_tag in elements.children_tag:
+                for element_tag in current_tag.children_tag:
                     if element_tag not in children_tag:
                         keep_element = False
                         break
                 if not keep_element:
                     continue
 
+            if by_regex:
+                if re.search(by_regex, current_tag.text):
+                    pass
+                else:
+                    continue
+
             if url_num_limit:  # 链接数量限制
-                if url_num_limit[0] <= elements.num_url <= url_num_limit[1]:
+                if url_num_limit[0] <= current_tag.num_url <= url_num_limit[1]:
                     pass
                 else:
                     continue
 
             if text_num_limit:  # 文本节点数量限制
-                if text_num_limit[0] <= elements.num_text <= text_num_limit[1]:
+                if text_num_limit[0] <= current_tag.num_text <= text_num_limit[1]:
                     pass
                 else:
                     continue
 
             if children_len_limit:  # 子节点数量限制
-                if children_len_limit[0] <= elements.children_len <= children_len_limit[1]:
+                if children_len_limit[0] <= current_tag.children_len <= children_len_limit[1]:
                     pass
                 else:
                     continue
 
             # If the element passed all the checks, add it to the new list.
-            remaining_elements.append(elements)
+            remaining_elements.append(current_tag)
 
         return remaining_elements
 

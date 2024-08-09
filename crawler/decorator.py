@@ -23,7 +23,7 @@ def cached_function(timeout):
                     result = await func(self, *args, **kwargs)
                     cache.set(key, result, expire=timeout)
                 else:
-                    logger.success(f'cache hit: {key}')
+                    logger.debug(f'cache hit: {key}')
                 return result
 
             return async_wrapper
@@ -35,7 +35,7 @@ def cached_function(timeout):
                     result = func(self, *args, **kwargs)
                     cache.set(key, result, expire=timeout)
                 else:
-                    logger.success(f'cache hit: {key}')
+                    logger.debug(f'cache hit: {key}')
                 return result
 
             return wrapper
