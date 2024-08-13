@@ -5,10 +5,12 @@ from time import perf_counter
 from typing import Any, Callable
 
 import diskcache
+
 from config.logging_config import logger
+from .celery import celery_app
+from .model import Param
 
-
-cache = diskcache.Cache('my_cache')
+cache = diskcache.Cache('my_cache',)
 
 
 # 创建一个缓存装饰器
@@ -66,3 +68,13 @@ def get_time(func: Callable) -> Callable:
         return async_wrapper
     else:
         return sync_wrapper
+
+
+def listen_taskpool_async(func):
+    @wraps(func)
+    def wrapper(params, *args, **kwargs):
+        if isinstance(params, dict):
+            params = Param(**params)
+        return asyncio.run(func(params, *args, **kwargs))
+
+    return celery_app.task(wrapper)

@@ -1,4 +1,6 @@
 # crawler/requester.py
+import asyncio
+
 import httpx
 import chardet
 import random
@@ -52,30 +54,30 @@ class Requester:
         self.proxies = None
         self.client = None
 
-    async def update_client(self):
+    def update_client(self):
         if self.cookie_pool:
             self.headers['Cookie'] = random.choice(self.cookie_pool)
         if self.proxy_pool:
             self.proxies = self.proxy_pool.get_proxy()
 
-        self.client = httpx.AsyncClient(proxies=self.proxies, headers=self.headers, verify=True)
+        self.client = httpx.Client(proxies=self.proxies, headers=self.headers, verify=True)
 
-    async def close_client(self):
+    def close_client(self):
         if self.client:
-            await self.client.aclose()
+            self.client.aclose()
 
     # @retry(stop=stop_after_attempt(5), wait=wait_fixed(3), before_sleep=before_sleep_log(logger, logging.INFO))
     @cached_function(timeout=600)
     # @get_time
-    async def send_request(self, url, method="GET", headers=None, params=None, data=None, json=None, encoding=None):
+    def send_request_sync(self, url, method="GET", headers=None, params=None, data=None, json=None, encoding=None):
         try:
             if headers is None:
                 headers = self.headers
             else:
                 headers.update(self.headers)
             if not self.client:
-                await self.update_client()
-            response = await self.client.request(
+                self.update_client()
+            response = self.client.request(
                 method=method,
                 url=url,
                 headers=headers,
@@ -95,8 +97,8 @@ class Requester:
             return response
         except Exception as e:
             logger.error(f"Request failed: {e}")
-            log_debug.trace(e)
-            await self.update_client()
+            # log_debug.trace(e)  # 确保 log_debug.trace(e) 是定义在某处的
+            self.update_client()
             raise
 
 

@@ -4,15 +4,33 @@ import time
 import threading
 from queue import Queue
 
-class Scheduler:
-    def __init__(self):
+from .workflow import MyWorkflow
+
+
+class Scheduler(MyWorkflow):
+    def __init__(
+            self,
+            domain: str,
+            start_path="/book/166492/",
+            end_path_regex="/book/166492/.*html"
+    ):
+        super().__init__(domain, start_path, end_path_regex)
         self.task_queue = Queue()
         self.jobs = []
         self.is_running = False
 
     def start(self):
-        self.is_running = True
-        threading.Thread(target=self.run).start()
+        self.main()
+
+    def commit_async_task(self, tag, task: [callable]):
+        pass
+
+
+    def data_offload(self, tag, target):
+        pass
+
+    def pull_task_response(self):
+        pass
 
     def stop(self):
         self.is_running = False
@@ -38,6 +56,3 @@ class Scheduler:
         while self.is_running:
             func()
             time.sleep(interval)  # 间隔
-
-# 在项目中使用 Scheduler
-scheduler = Scheduler()

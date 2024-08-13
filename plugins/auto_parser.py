@@ -32,7 +32,7 @@ class HTMLStructureModel(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    def extract_all_url(self, target_tag_attribute: list = None, ignore_elements: list = None, ):
+    def extract_all_url(self, target_tag_attribute: list = None, ignore_elements: list = None) -> List[URLModel]:
         """
         提取当前标签及其子标签的所有链接
         :param target_tag_attribute:
@@ -263,9 +263,16 @@ class AutoParser:
 
         return remaining_elements
 
-    def find_maximum(self, find_type='url', target_tag='dt', index_offset=0) -> HTMLStructureModel:
+    def find_maximum(
+            self,
+            find_type: str = 'url',
+            target_tag: str = 'dt',
+            tag_attribute: dict = None,
+            index_offset: int = 0,
+    ) -> HTMLStructureModel:
         """
         找到文本节点最多的标签
+        :param tag_attribute:
         :param index_offset:
         :param find_type:
         :param target_tag:
@@ -275,7 +282,7 @@ class AutoParser:
 
         if find_type not in ['text', 'url']:
             raise ValueError("tag_type must be 'text' or 'url'")
-
+        ignore_xpath=[]
         def bfs(node: HTMLStructureModel) -> HTMLStructureModel:
             path_to_node = []
             queue = [node]
@@ -285,6 +292,8 @@ class AutoParser:
                 current = queue.pop(0)
                 # print(current.model_dump_json(indent=4))
                 for child in current.children:
+                    if child.xpath in ignore_xpath:
+                        continue
                     if find_type == 'text':
                         if child.num_text > max_text:
                             max_text = child.num_text
@@ -298,9 +307,16 @@ class AutoParser:
                     path_to_node.append(current_max_node)
 
             path_to_node_reversed = list(reversed(path_to_node))
+            match_flag = False
             for index, i in enumerate(path_to_node_reversed):
                 # print(index, i)
                 if target_tag in i.tag:
                     return path_to_node_reversed[index + index_offset]
+            if not match_flag:
+                if len(path_to_node_reversed) == 0:
+                    return None
+                ignore_xpath.append(path_to_node_reversed[0].xpath)
+                return bfs(self.structure)
+
 
         return bfs(self.structure)
