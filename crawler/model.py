@@ -22,6 +22,11 @@ class Param(BaseModel):
     url: str = 'https://example.com/example'
     end_path_regex: str = '/example/.*html'
     workflow_id: str
+    url_params: dict = {
+        "param": None,
+        "data": None,
+        "json": None,
+    }
 
     def __init__(self, /, **data: Any):
         super().__init__(**data)

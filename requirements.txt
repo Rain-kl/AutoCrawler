@@ -16,3 +16,4 @@ chardet
 diskcache
 redis
 celery
+flower  # celery monitoring

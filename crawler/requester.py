@@ -1,17 +1,38 @@
 # crawler/requester.py
-import asyncio
 
-import httpx
-import chardet
 import random
-import logging
 from typing import Union
-from loguru import logger as log_debug
-from tenacity import retry, stop_after_attempt, wait_fixed, before_sleep_log
-from .headers import generate_headers
-from .decorator import cached_function
+import chardet
+import httpx
+
 from config.settings import settings
-from .logger import logger
+from config.logging_config import logger
+from .decorator import cached_function
+
+
+
+class Headers:
+    def __init__(self, headers: dict = None):
+        if headers is None:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1'
+            }
+        self.headers = headers
+
+    def __str__(self):
+        return self.headers
+
+    def json(self):
+        return self.headers
+
+    def update(self, headers):
+        self.headers.update(headers)
 
 
 class ProxyConfig:
@@ -41,12 +62,14 @@ class ProxyConfig:
 class Requester:
     def __init__(
             self,
-            headers: dict = generate_headers(),
+            headers: dict = None,
             timeout: int = settings.request_timeout,
             proxy_pool: ProxyConfig = ProxyConfig(),
             # cookie_pool: list = None,  # todo: cookie_pool
             # proxies: dict = None
     ):
+        if headers is None:
+            headers = Headers()
         self.headers = headers
         self.timeout = timeout
         self.proxy_pool = proxy_pool
@@ -60,15 +83,16 @@ class Requester:
         if self.proxy_pool:
             self.proxies = self.proxy_pool.get_proxy()
 
-        self.client = httpx.Client(proxies=self.proxies, headers=self.headers, verify=True)
+        self.client = httpx.Client(proxies=self.proxies, headers=self.headers.json(), verify=True)
 
     def close_client(self):
         if self.client:
             self.client.aclose()
 
-    # @retry(stop=stop_after_attempt(5), wait=wait_fixed(3), before_sleep=before_sleep_log(logger, logging.INFO))
+    def __del__(self):
+        self.close_client()
+
     @cached_function(timeout=600)
-    # @get_time
     def send_request_sync(self, url, method="GET", headers=None, params=None, data=None, json=None, encoding=None):
         try:
             if headers is None:
@@ -80,7 +104,7 @@ class Requester:
             response = self.client.request(
                 method=method,
                 url=url,
-                headers=headers,
+                headers=headers.json(),
                 params=params,
                 data=data,
                 timeout=self.timeout,

@@ -1,6 +1,6 @@
 import celery
 from config.settings import settings
-from celery.signals import task_prerun, task_postrun, task_failure
+from celery.signals import task_postrun, task_failure
 
 if settings.task_queue == 'redis':
     backend = settings.redis_url
@@ -8,11 +8,12 @@ if settings.task_queue == 'redis':
 else:
     backend = settings.rabbitmq_url
     broker = settings.rabbitmq_url
+
 celery_app = celery.Celery(
     'tasks',
     broker=broker,
     backend=backend,
-    include=['crawler.scheduler']
+    include=['crawler.myworkflow']
 )
 
 celery_app.conf.update(
