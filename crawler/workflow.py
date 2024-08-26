@@ -4,10 +4,9 @@ import threading
 import time
 from hashlib import md5
 
-import celery.result
 from config.logging_config import logger
 from .model import Param
-from .decorator import cache
+from .recorder import Recorder
 from .utils import get_celery_result
 
 
@@ -39,9 +38,14 @@ class Workflow:
                 "json": None,
             }
         )
+        self.wait_flag = 0
         print(f"Workflow ID: {self.param_base.workflow_id}")
 
     def start(self):
+        """
+        启动工作流
+        :return:
+        """
         thread_main = threading.Thread(target=self.main)
         thread_wait = threading.Thread(target=self.wait_result)
         thread_main.start()
@@ -54,115 +58,30 @@ class Workflow:
                 break
 
         logger.info(get_celery_result(task_id))
-
         time.sleep(1)
         self.stop_event.set()  # Signal threads to stop
+        task_id_set = recorder.get_all_task_id()
+        for task_id in task_id_set:
+            self.task_pipline(task_id)
 
     def wait_result(self):
+        """
+        等待任务
+        :return:
+        """
         recorder = Recorder(self.param_base.workflow_id)
         while not self.stop_event.is_set():
             time.sleep(1)
-            task_id = recorder.get_task_id()
-            print(f"\ntask_id: {task_id}\nlen: {len(task_id)}\n")
+            task_id_set = recorder.get_updated_task_id()
+            if task_id_set:
+                print(f"task_id: {task_id_set}\nlen: {len(task_id_set)}")
 
     def main(self):
         raise NotImplementedError("main method should be implemented in subclass")
 
+    def task_pipline(self, task_id):
+        return self.data_processing(get_celery_result(task_id))
 
-class Recorder:
-    def __init__(self, workflow_id):
-        self.workflow_id = workflow_id
-        self.visited_id = f"visited-{self.workflow_id}"
-        self.cache_task_id = f"task-{self.workflow_id}"
-        self.cache_queue: set = set()
-
-    def register_workflow_id(self, task_id):
-        """
-        注册workflow_id, 用于记录任务状态(完成失败等)
-        :param task_id:
-        :return:
-        """
-        cache.set(self.workflow_id, task_id)
-
-    def get_workflow_task_id(self):
-        """
-        获取workflow_id对应的task_id
-        :return:
-        """
-        result = cache.get(self.workflow_id)
-        if isinstance(result, celery.result.AsyncResult):
-            return result.id
-        return result
-
-    def record_visited_url(self, url):
-        """
-        记录已访问的url
-        :param url:
-        :return:
-        """
-        result = cache.get(self.visited_id)
-        if result is None:
-            url_set = [url]
-            cache.set(self.visited_id, url_set)
-        else:
-            result.append(url)
-            cache.set(self.visited_id, result)
-
-    def assert_visited_url(self, url):
-        """
-        判断url是否已经访问过
-        :param url:
-        :return:
-        """
-        result = cache.get(self.visited_id)
-        if result is None:
-            return False
-        return url in result
-
-    def record_task_id(self, task_id) -> set:
-        """
-        记录task_id
-        :param task_id:
-        :return:
-        """
-        task_id_set: set = cache.get(self.cache_task_id)
-        if task_id_set is None:
-            task_id_set = set()
-            task_id_set.add(task_id)
-            cache.set(self.cache_task_id, task_id_set)
-        else:
-            task_id_set.add(task_id)
-            cache.set(self.cache_task_id, task_id_set)
-        return task_id_set
-
-    def empty_task_id(self):
-        cache.set(self.cache_task_id, None)
-
-    def get_all_task_id(self):
-        """
-        获取所有task_id
-        :return:
-        """
-        return cache.get(self.cache_task_id)
-
-    def get_task_id(self):
-        """
-        获取新的task_id
-        :return:
-        """
-        all_task_id = self.get_all_task_id()
-        if all_task_id is None:
-            return set()
-        difference = self.cache_queue.symmetric_difference(all_task_id)
-        self.cache_queue = all_task_id.copy()
-        return difference
-
-
-def register_crawler(func):
-    def wrapper(self, *args, **kwargs):
-        recorder = Recorder(self.param_base.workflow_id)
-        task_id = func(self, *args, **kwargs)
-        recorder.register_workflow_id(task_id)
-        return task_id
-
-    return wrapper
+    def data_processing(self, data):
+        print(data)
+        return data

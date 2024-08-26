@@ -13,7 +13,7 @@ celery_app = celery.Celery(
     'tasks',
     broker=broker,
     backend=backend,
-    include=['crawler.myworkflow']
+    include=['crawler.myWorkflow']
 )
 
 celery_app.conf.update(
