@@ -22,6 +22,10 @@ class Settings(BaseSettings, *plugin_settings_classes):
     redis_url: str = "redis://localhost:6379/0"
     rabbitmq_url: str = "amqp://guest:guest@localhost:5672/"
 
+    # celery worker 配置
+    flower_port: str = "5555"
+    flower_address: str = "0.0.0.0"
+
     # 日志相关配置
     log_level: str = "INFO"
 

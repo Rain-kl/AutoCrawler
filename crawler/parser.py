@@ -44,22 +44,3 @@ class HTMLParser(AutoParser):  # 使用AutoParser自动解析HTML
 
     def your_method(self):
         pass
-
-
-if __name__ == '__main__':
-    with open('../test.html', 'r') as f:
-        sample_html = f.read()
-
-    p = Parser(sample_html)
-    html_struct = p.html.extract_structure()
-    # max_node = parser.html.find_maximum()
-    max_node = p.html.find(tag='div')
-    # output:
-    # print(html_struct.model_dump_json(indent=2))
-    print(max_node)
-    for node in max_node:
-        print("output: ", end='')
-        print(node)
-
-    # print(max_node.extract_all_text(ignore_elements=['dt']))
-    # print(len(max_node.extract_all_url()))

@@ -52,7 +52,7 @@ def get_time(func: Callable) -> Callable:
         result: Any = func(*args, **kwargs)
         end_time: float = perf_counter()
 
-        logger.debug(f'"{func.__name__}()" took {end_time - start_time:.3f} seconds to execute')
+        logger.info(f'"{func.__name__}()" took {end_time - start_time:.3f} seconds to execute')
         return result
 
     @wraps(func)
@@ -61,7 +61,7 @@ def get_time(func: Callable) -> Callable:
         result: Any = await func(*args, **kwargs)
         end_time: float = perf_counter()
 
-        logger.debug(f'"{func.__name__}()" took {end_time - start_time:.3f} seconds to execute')
+        logger.info(f'"{func.__name__}()" took {end_time - start_time:.3f} seconds to execute')
         return result
 
     if asyncio.iscoroutinefunction(func):

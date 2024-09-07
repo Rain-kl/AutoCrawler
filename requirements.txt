@@ -17,3 +17,5 @@ diskcache
 redis
 celery
 flower  # celery monitoring
+python-dotenv  # .env file support
+rich

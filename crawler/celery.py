@@ -13,7 +13,7 @@ celery_app = celery.Celery(
     'tasks',
     broker=broker,
     backend=backend,
-    include=['crawler.myWorkflow']
+    include=[settings.celery_include]
 )
 
 celery_app.conf.update(
@@ -29,7 +29,6 @@ celery_app.conf.update(
 # @task_prerun.connect
 # def task_prerun_handler(sender=None, task_id=None, task=None, **kwargs):
 #     print(f'Task {task.name} (ID: {task_id}) is about to start.')
-
 
 @task_postrun.connect
 def task_postrun_handler(sender=None, task_id=None, task=None, **kwargs):

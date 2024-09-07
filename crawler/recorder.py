@@ -99,7 +99,7 @@ class Recorder:
         """
         return cache.get(self.cache_task_id)
 
-    def get_updated_task_id(self)->set:
+    def get_updated_task_id(self) -> set:
         """
         每一次调会获取全部task_id, 并与上一次的task_id做差集，返回差集，为新增的task_id
         :return:
@@ -117,6 +117,7 @@ def register_crawler(func):
         recorder = Recorder(self.param_base.workflow_id)
         task_obj = func(self, *args, **kwargs)
         recorder.register_workflow_id(task_obj.id)
+        logger.success(f"Register workflow_id: {self.param_base.workflow_id}")
         return task_obj
 
     return wrapper

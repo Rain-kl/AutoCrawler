@@ -16,12 +16,12 @@ class ResponseModel(BaseModel):
 
 
 class Param(BaseModel):
-    tag: str = 'example'
-    domain: str = 'https://example.com'
-    url_path: str = '/example'
-    url: str = 'https://example.com/example'
-    end_path_regex: str = '/example/.*html'
-    workflow_id: str
+    tag: str = 'example'  # 任务标签
+    domain: str = 'https://example.com'  # 网站域名
+    url_path: str = '/example'  # 网站路径
+    url: str = 'https://example.com/example'  # 完整网址, 由domain和url_path自动拼接而成
+    end_path_regex: str = '/example/.*html'  # 结束路径正则表达式
+    workflow_id: str  # 工作流ID
     url_params: dict = {
         "param": None,
         "data": None,

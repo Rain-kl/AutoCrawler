@@ -27,7 +27,7 @@ AutoCrawler 是一个 Apache2 许可的分布式的快速高级网络爬虫和�
 
 ✅初步完成工作流模板，后续会不断精简并让用户更方便的使用
 
-⌛️ 完成日志记录模块
+✅完成日志记录模块
 
 ⌛️ 完成调度器模块，用于调度工作流
 
@@ -99,9 +99,7 @@ my_spider_project/
 │   ├── test_data_processor.py     # 数据处理模块测试
 │   ├── test_storage.py            # 数据存储模块测试
 ├── scripts/                       # 脚本目录，用于存放启动脚本和工具
-│   ├── run_master.py              # 启动主节点脚本
 │   ├── run_worker.sh              # 启动从节点脚本
-│   ├── run_api.py                 # 启动API服务脚本
 ├── static/                        # 静态资源目录（如配置文件或测试数据）
 │   ├── sample_config.yaml         # 示例配置文件
 │   ├── sample_data.json           # 示例数据
@@ -180,15 +178,24 @@ $ cp .env.example .env
 ```
 
 
-### 4. 一键启动
+### 4. 启动爬虫
 
-按照以下命令启动分布式节点
+- 按照以下命令启动分布式节点
 
 ```shell
-$ bash scripts/start_cellery.sh
+$ python scripts/run_worker.py
+
+╭───────────────── 🤗 celery worker is ready!  ─────────────────╮
+│                                                               │
+│  flower url            http://0.0.0.0:5555                    │
+│  Task Queue            redis                                  │
+│  Celery Include        crawler.myWorkflow                     │
+│  Redis URL             redis://localhost:6379/0               │
+╰───────────────────────────────────────────────────────────────╯
+
 ```
 
-按照以下命令启动服务
+- 按照以下命令启动服务
 
 ```shell
 $ python main.py
