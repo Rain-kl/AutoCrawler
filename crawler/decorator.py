@@ -10,7 +10,7 @@ from config.logging_config import logger
 from .celery import celery_app
 from .model import Param
 
-cache = diskcache.Cache('my_cache',)
+cache = diskcache.Cache('.cache',)
 
 
 # 创建一个缓存装饰器
