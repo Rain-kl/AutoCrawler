@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import os
-import signal
 import subprocess
-import sys
+import threading
+
 from loguru import logger
 from dotenv import load_dotenv
 from rich import print
@@ -66,25 +66,24 @@ def start_celery_worker_and_flower(workdir, celery_module):
 
 def cleanup(worker_process, flower_process):
     print("Stopping Celery Worker and Flower...")
-    worker_process.terminate()
-    flower_process.terminate()
-    worker_process.wait()
-    flower_process.wait()
+    exit(0)
+    # worker_process.terminate()
+    # flower_process.terminate()
+    # worker_process.wait()
+    # flower_process.wait()
 
 
 def main():
-    print_info()
-
     workdir = './'
     celery_module = "crawler"
 
     worker_process, flower_process = start_celery_worker_and_flower(workdir, celery_module)
 
-    def signal_handler(sig, frame):
-        cleanup(worker_process, flower_process)
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, signal_handler)
+    # def signal_handler(sig, frame):
+    #     cleanup(worker_process, flower_process)
+    #     sys.exit(0)
+    #
+    # signal.signal(signal.SIGINT, signal_handler)
 
     # Wait for the subprocesses to complete
     worker_process.wait()
@@ -97,4 +96,7 @@ if __name__ == "__main__":
     if 'script' in cwd:
         logger.error('current path is script, change to parent path')
     else:
-        main()
+        print_info()
+        thread = threading.Thread(target=main)
+        thread.start()
+        thread.join()
