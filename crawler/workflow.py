@@ -3,9 +3,9 @@ import random
 import threading
 import time
 from hashlib import md5
-
+from data import processor,loader
 from config.logging_config import logger
-from .model import Param
+from .model import Param, ResponseModel
 from .recorder import Recorder
 from .utils import get_celery_result
 
@@ -39,6 +39,8 @@ class Workflow:
             }
         )
         self.wait_flag = 0
+        self.data_processor=processor.DataProcessor
+        self.data_loader=loader.DataLoader
         print(f"Workflow ID: {self.param_base.workflow_id}")
 
     def start(self):
@@ -61,8 +63,8 @@ class Workflow:
         time.sleep(1)
         self.stop_event.set()  # Signal threads to stop
         task_id_set = recorder.get_all_task_id()
-        for task_id in task_id_set:
-            self.task_pipline(task_id)
+        self.task_pipeline(task_id_set)
+
 
     def wait_result(self):
         """
@@ -79,9 +81,12 @@ class Workflow:
     def main(self):
         raise NotImplementedError("main method should be implemented in subclass")
 
-    def task_pipline(self, task_id):
-        return self.data_processing(get_celery_result(task_id))
 
-    def data_processing(self, data):
+    def task_pipeline(self, task_id_set):
+        for task_id in task_id_set:
+            result_data=self.data_processing(get_celery_result(task_id))
+
+
+    def data_processing(self, data: ResponseModel):
         print(data)
         return data

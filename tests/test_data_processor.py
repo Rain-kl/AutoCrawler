@@ -1,6 +1,6 @@
 # tests/test_data_processor.py
 
-from data.data_processor import DataProcessor
+from data.processor import DataProcessor
 
 
 def test_clean_text():

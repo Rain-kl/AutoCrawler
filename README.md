@@ -79,7 +79,7 @@ my_spider_project/
 │   │── recorder.py                # 工作流记录器
 ├── data/
 │   ├── __init__.py
-│   ├── data_processor.py          # 数据处理
+│   ├── processor.py          # 数据处理
 │   ├── storage.py                 # 数据存储模块
 ├── plugins/                       # 插件目录，用于日后扩展
 │   ├── __init__.py

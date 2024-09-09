@@ -31,6 +31,9 @@ class WorkflowExample(Workflow):
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=3)
 def step1(self, params: Param):
+    """
+    提交任务，返回结果，任务全部提交完成
+    """
     try:
         if isinstance(params, dict):
             params = Param(**params)
@@ -47,6 +50,9 @@ def step1(self, params: Param):
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=3)
 def step2(self, params: Param) -> ResponseModel:
+    """
+    执行完成，返回任务结果
+    """
     try:
         if isinstance(params, dict):
             params = Param(**params)
