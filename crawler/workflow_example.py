@@ -2,6 +2,8 @@
 import celery.result
 
 from config.logging_config import logger
+from data.loader import DataLoader, TextLoader
+from data.processor import TextProcessor
 from .celery import celery_app
 from .model import Param, ResponseModel
 from .recorder import Recorder
@@ -25,8 +27,15 @@ class WorkflowExample(Workflow):
         )
         return step1.delay(param)
 
-    def data_processing(self, data):
-        ...
+    def data_processing(self, data) -> ResponseModel:
+        print(data)
+        return data
+
+    def data_loader(self) -> DataLoader:
+        return TextLoader()
+
+    def data_storage(self, data_processor: TextProcessor, data: [ResponseModel]):
+        data_processor.save_txt("save.txt")
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=3)

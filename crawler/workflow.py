@@ -3,8 +3,9 @@ import random
 import threading
 import time
 from hashlib import md5
-from data import processor,loader
 from config.logging_config import logger
+from data.loader import DataLoader
+from data.processor import DataProcessor, AutoProcessor
 from .model import Param, ResponseModel
 from .recorder import Recorder
 from .utils import get_celery_result
@@ -39,8 +40,6 @@ class Workflow:
             }
         )
         self.wait_flag = 0
-        self.data_processor=processor.DataProcessor
-        self.data_loader=loader.DataLoader
         print(f"Workflow ID: {self.param_base.workflow_id}")
 
     def start(self):
@@ -65,7 +64,6 @@ class Workflow:
         task_id_set = recorder.get_all_task_id()
         self.task_pipeline(task_id_set)
 
-
     def wait_result(self):
         """
         等待任务
@@ -81,12 +79,27 @@ class Workflow:
     def main(self):
         raise NotImplementedError("main method should be implemented in subclass")
 
-
     def task_pipeline(self, task_id_set):
+        result_data_list = []
         for task_id in task_id_set:
-            result_data=self.data_processing(get_celery_result(task_id))
+            result_data=get_celery_result(task_id)
+            processed_data = self.data_processing(
+                ResponseModel.model_validate(result_data)
+            )
+            result_data_list.append(processed_data)
 
+        data_loader = self.data_loader()
+        data_loader.load(result_data_list)
+        data_processor = AutoProcessor(data_loader)
+        print(type(data_processor))
+        self.data_storage(data_processor, result_data_list)
 
-    def data_processing(self, data: ResponseModel):
+    def data_loader(self) -> DataLoader:
+        raise NotImplementedError("data_loader method should be implemented in subclass")
+
+    def data_storage(self, data_processor: DataProcessor, data: [ResponseModel]):
+        raise NotImplementedError("data_storage method should be implemented in subclass")
+
+    def data_processing(self, data: ResponseModel) -> ResponseModel:
         print(data)
         return data

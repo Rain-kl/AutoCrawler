@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 class ResponseModel(BaseModel):
     tag: str
-    response: httpx.Response | str
+    response: Any
 
     class Config:
         arbitrary_types_allowed = True

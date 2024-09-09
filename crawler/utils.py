@@ -2,7 +2,7 @@ from celery.result import AsyncResult
 from .celery import celery_app
 
 
-def get_celery_result(task_id):
+def get_celery_result(task_id) -> dict:
     """
     【阻塞】获取Celery任务结果
     :param task_id:
@@ -16,7 +16,7 @@ def get_celery_result(task_id):
             return result.traceback
 
 
-def parse_url(domain, url):
+def parse_url(domain: str, url: str) -> str:
     if url.startswith('http'):
         return url
     return domain + url
