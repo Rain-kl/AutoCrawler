@@ -59,54 +59,55 @@ AutoCrawler 是一个 Apache2 许可的分布式的快速高级网络爬虫和�
 
 调度器提供接口由前端调用，前端可以通过接口查看任务的状态，任务的日志，任务的结果等。
 
-## 项目架构
+## 项目目录
 ```shell
-my_spider_project/
-├── api/
+├── LICENSE
+├── README.md
+├── api
 │   ├── __init__.py
-│   ├── endpoints.py               # 定义API端点，包含运行时信息等
-├── config/
+│   └── endpoints.py
+├── config
 │   ├── __init__.py
-│   ├── settings.py                # 全局配置文件
-│   ├── logging_config.py          # 日志配置
-├── crawler/
+│   ├── logging_config.py
+│   └── settings.py
+├── crawler
+│   ├── README.md
 │   ├── __init__.py
-│   ├── scheduler.py               # 调度模块
-│   ├── requester.py               # 请求模块
-│   ├── parser.py                  # 解析模块
-│   ├── workflow.py                # 用户工作流引擎
-│   │── workflow_example.py        # 工作流示例
-│   │── recorder.py                # 工作流记录器
-├── data/
+│   ├── celery.py
+│   ├── decorator.py
+│   ├── logs
+│   │   ├── crawler_debug.log
+│   │   ├── crawler_error.log
+│   │   └── crawler_info.log
+│   ├── model.py
+│   ├── myWorkflow.py
+│   ├── parser.py
+│   ├── recorder.py
+│   ├── requester.py
+│   ├── scheduler.py
+│   ├── utils.py
+│   ├── workflow.py
+│   └── workflow_example.py
+├── data
 │   ├── __init__.py
-│   ├── processor.py          # 数据处理
-│   ├── storage.py                 # 数据存储模块
-├── plugins/                       # 插件目录，用于日后扩展
+│   ├── loader.py
+│   ├── model.py
+│   └── processor.py
+├── main.py
+├── plugins
 │   ├── __init__.py
-│   ├── text_extractor.py          # 文本提取插件
-│   ├── img_extractor.py           # 图片提取插件（未来扩展）
-│   ├── video_extractor.py         # 视频提取插件（未来扩展）
-├── workers/                       # 分布式节点管理
-│   ├── __init__.py
-│   ├── master_node.py             # 主节点模块
-│   ├── worker_node.py             # 从节点模块
-├── tests/                         # 测试目录
-│   ├── __init__.py
-│   ├── test_api.py                # API模块测试
-│   ├── test_scheduler.py          # 调度模块测试
-│   ├── test_requester.py          # 请求模块测试
-│   ├── test_parser.py             # 解析模块测试
-│   ├── test_data_processor.py     # 数据处理模块测试
-│   ├── test_storage.py            # 数据存储模块测试
-├── scripts/                       # 脚本目录，用于存放启动脚本和工具
-│   ├── run_worker.sh              # 启动从节点脚本
-├── static/                        # 静态资源目录（如配置文件或测试数据）
-│   ├── sample_config.yaml         # 示例配置文件
-│   ├── sample_data.json           # 示例数据
-├── Dockerfile                     # Docker配置文件
-├── docker-compose.yml             # Docker Compose文件
-├── requirements.txt               # Python依赖包文件
-├── README.md                      # 项目说明文档
+│   ├── auto_parser.py
+│   ├── openai_core.py
+│   ├── settings.py
+│   └── text_extractor.py
+├── requirements.txt
+├── script
+│   └── run_worker.py
+└── workers
+    ├── __init__.py
+    ├── master_node.py
+    └── worker_node.py
+
 ```
 
 ## 解决的痛点
