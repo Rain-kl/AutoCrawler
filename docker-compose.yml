@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      pull: false
+    container_name: ACWorker
+    restart: always
+    ports:
+      - "5555:5555"
+    command: >
+      sh -c "python script/run_worker.py"

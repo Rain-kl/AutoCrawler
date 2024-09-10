@@ -75,7 +75,7 @@ class Requester:
         self.proxy_pool = proxy_pool
         self.cookie_pool = None  # todo: cookie_pool
         self.proxies = None
-        self.client = None
+        self.client:Union[None,httpx.Client] = None
 
     def update_client(self):
         if self.cookie_pool:
@@ -87,7 +87,7 @@ class Requester:
 
     def close_client(self):
         if self.client:
-            self.client.aclose()
+            self.client.close()
 
     def __del__(self):
         self.close_client()
