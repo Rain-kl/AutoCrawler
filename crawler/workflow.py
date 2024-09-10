@@ -91,7 +91,6 @@ class Workflow:
         data_loader = self.data_loader()
         data_loader.load(result_data_list)
         data_processor = AutoProcessor(data_loader)
-        print(type(data_processor))
         self.data_storage(data_processor, result_data_list)
 
     def data_loader(self) -> DataLoader:

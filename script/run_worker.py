@@ -54,7 +54,7 @@ def print_info():
 def start_celery_worker_and_flower(workdir, celery_module):
     os.chdir(workdir)
 
-    worker_cmd = ['celery', '-A', celery_module, 'worker', '--loglevel=info']
+    worker_cmd = ['celery', '-A', celery_module, 'worker', '--loglevel=info', '--concurrency=4']
     flower_cmd = ['celery', '-A', celery_module, 'flower', f'--port={flower_port}',
                   f'--address={flower_address}']
 

@@ -92,7 +92,7 @@ class Requester:
     def __del__(self):
         self.close_client()
 
-    @cached_function(timeout=600)
+    # @cached_function(timeout=600)
     def send_request_sync(self, url, method="GET", headers=None, params=None, data=None, json=None, encoding=None):
         try:
             if headers is None:

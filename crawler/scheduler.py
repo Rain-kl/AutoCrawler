@@ -1,8 +1,5 @@
 # crawler/scheduler.py
 
-import time
-import threading
-from queue import Queue
 
 from .workflow import Workflow
 

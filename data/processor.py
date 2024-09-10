@@ -6,7 +6,6 @@ from .loader import DataLoader, TextLoader
 
 
 def AutoProcessor(loader: Union[DataLoader, TextLoader]):
-    print(type(loader))
     if isinstance(loader, TextLoader):
         return TextProcessor(loader)
     elif isinstance(loader, DataLoader):
