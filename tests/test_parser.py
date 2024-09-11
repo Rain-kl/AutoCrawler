@@ -4,17 +4,17 @@ from crawler.parser import Parser
 
 
 def test_parse_html():
-    parser = Parser()
     html_content = "<html><head><title>Test Page</title></head><body><p>Hello, world!</p></body></html>"
-    soup = parser.parse_html(html_content)
 
-    assert soup.title.string == "Test Page"
+    parser = Parser(html_content,type_='text')
+    target = parser.html.find('p')
+    print(target)
+    assert target[0].text== "Hello, world!"
 
 
 def test_extract_links():
-    parser = Parser()
     html_content = '<html><body><a href="http://example.com">Example</a></body></html>'
-    soup = parser.parse_html(html_content)
-    links = parser.extract_links(soup)
+    parser = Parser(html_content,type_='text')
+    target = parser.html.find('a')
 
-    assert links == ["http://example.com"]
+    assert target[0].attributes['href'] == "http://example.com"
