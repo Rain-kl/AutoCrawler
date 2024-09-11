@@ -1,14 +1,13 @@
 # crawler/requester.py
-
 import random
 from typing import Union
+
 import chardet
-import httpx
+import requests
 
-from config.settings import settings
 from config.logging_config import logger
+from config.settings import settings
 from .decorator import cached_function
-
 
 
 class Headers:
@@ -75,42 +74,25 @@ class Requester:
         self.proxy_pool = proxy_pool
         self.cookie_pool = None  # todo: cookie_pool
         self.proxies = None
-        self.client:Union[None,httpx.Client] = None
 
-    def update_client(self):
-        if self.cookie_pool:
-            self.headers['Cookie'] = random.choice(self.cookie_pool)
-        if self.proxy_pool:
-            self.proxies = self.proxy_pool.get_proxy()
-
-        self.client = httpx.Client(proxies=self.proxies, headers=self.headers.json(), verify=True)
-
-    def close_client(self):
-        if self.client:
-            self.client.close()
-
-    def __del__(self):
-        self.close_client()
-
-    # @cached_function(timeout=600)
+    @cached_function(timeout=600)
     def send_request_sync(self, url, method="GET", headers=None, params=None, data=None, json=None, encoding=None):
         try:
             if headers is None:
                 headers = self.headers
             else:
                 headers.update(self.headers)
-            if not self.client:
-                self.update_client()
-            response = self.client.request(
+            request = requests.Request(
                 method=method,
                 url=url,
                 headers=headers.json(),
                 params=params,
                 data=data,
-                timeout=self.timeout,
                 json=json,
-                follow_redirects=True
             )
+            with requests.Session() as session:
+                prepared_request = session.prepare_request(request)  # 预处理请求
+                response = session.send(prepared_request)  # 发送请求并获取响应
             if encoding:
                 response.encoding = encoding
             else:
@@ -122,7 +104,6 @@ class Requester:
         except Exception as e:
             logger.error(f"Request failed: {e}")
             # log_debug.trace(e)  # 确保 log_debug.trace(e) 是定义在某处的
-            self.update_client()
             raise
 
 

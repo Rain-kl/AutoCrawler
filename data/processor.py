@@ -25,15 +25,16 @@ class TextProcessor:
         self.loader = loader
         assert self.loader.data is not None, "Loader is not loaded"
 
-    def save_txt(self, filename="save.txt", tag_prefix="#"):
+    def save_txt(self, filename="save.txt", tag_prefix="#") -> bool:
         with open(filename, "w") as f:
             for tag, response in self.loader:
                 tag_line = "\n" + f"{tag_prefix} {tag}".strip() + "\n"
                 f.write(tag_line)
                 f.write("\n    ".join(response))
                 f.write("\n")
+        return True
 
-    def save_json(self, filename="save.json"):
+    def save_json(self, filename="save.json") -> bool:
         json_data = []
         with open(filename, "w") as f:
             for tag, response in self.loader:
@@ -42,3 +43,4 @@ class TextProcessor:
                     "response": response
                 })
             json.dump(json_data, f, ensure_ascii=False, indent=4)
+        return True
