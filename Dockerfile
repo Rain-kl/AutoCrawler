@@ -5,5 +5,5 @@ COPY ./ /app
 RUN pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
 RUN --mount=type=cache,target=/root/.cache \
     pip install -r requirements.txt
-#CMD ["python","script/run_worker.py"]
-CMD ["celery", "-A", "crawler", "worker", "--loglevel=info"]
+CMD ["python","script/run_worker.py"]
+#CMD ["celery", "-A", "crawler", "worker", "--loglevel=info"]
