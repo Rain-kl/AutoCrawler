@@ -1,10 +1,10 @@
 # crawler/recorder.py
 import json
-
-import celery.result
+from typing import Union
 
 from config.logging_config import logger
 from .decorator import cache
+from .utils import redis
 
 
 class Recorder:
@@ -15,9 +15,9 @@ class Recorder:
     """
 
     def __init__(self, workflow_id):
-        self.workflow_id = workflow_id
-        self.cache_visited_id = f"visited-{self.workflow_id}"
-        self.cache_task_id = f"task-{self.workflow_id}"
+        self.workflow_id: str = workflow_id
+        self.cache_visited_id: str = f"visited-{self.workflow_id}"
+        self.cache_task_id: str = f"task-{self.workflow_id}"
         self.cache_queue: set = set()
 
     def register_workflow_id(self, task_id):
@@ -27,19 +27,18 @@ class Recorder:
         :return:
         """
         if isinstance(task_id, str):
-            cache.set(self.workflow_id, task_id)
+            redis.set(self.workflow_id, task_id)
         else:
             raise ValueError("task_id should be str")
 
-    def get_workflow_task_id(self):
+    def get_workflow_task_id(self) -> str:
         """
         获取workflow_id对应的task_id，用于查询主任务状态
         :return:
         """
-        result = cache.get(self.workflow_id)
-        if isinstance(result, celery.result.AsyncResult):
-            logger.warning(f"task_id: {result.id} should be str")
-            return result.id
+        result = redis.get(self.workflow_id)
+        if isinstance(result, bytes):
+            result = result.decode()
         return result
 
     def record_visited_url(self, url):
@@ -48,13 +47,18 @@ class Recorder:
         :param url:
         :return:
         """
-        result = cache.get(self.cache_visited_id)
+        result = redis.get(self.cache_visited_id)
         if result is None:
             url_set = [url]
-            cache.set(self.cache_visited_id, url_set)
+            url_set_s = json.dumps(url_set)
+            redis.set(self.cache_visited_id, url_set_s)
         else:
-            result.append(url)
-            cache.set(self.cache_visited_id, result)
+            if isinstance(result, bytes):
+                result = result.decode()
+            json_data: list = json.loads(result)
+            json_data.append(url)
+            result = json.dumps(json_data)
+            redis.set(self.cache_visited_id, result)
 
     def assert_visited_url(self, url):
         """
@@ -62,12 +66,15 @@ class Recorder:
         :param url:
         :return:
         """
-        result = cache.get(self.cache_visited_id)
+        result = redis.get(self.cache_visited_id)
         if result is None:
             return False
-        return url in result
+        if isinstance(result, bytes):
+            result = result.decode()
+        json_data: list = json.loads(result)
+        return url in json_data
 
-    def record_task_id(self, task_id) -> list:
+    def record_task_id(self, task_id: str) -> list:
         """
         记录task_id
         :param task_id:
@@ -76,28 +83,37 @@ class Recorder:
         print(f"#debug# task_id: {task_id}")
         if not isinstance(task_id, str):
             raise ValueError("task_id should be str")
-        task_id_set: list = cache.get(self.cache_task_id)
-        if task_id_set is None:
+        task_id_set_b: Union[bytes, str] = redis.get(self.cache_task_id)
+        if task_id_set_b is None:
             task_id_set = list()
             task_id_set.append(task_id)
-            cache.set(self.cache_task_id, task_id_set)
+            task_id_set_s = json.dumps(task_id_set)
+            redis.set(self.cache_task_id, task_id_set_s)
         else:
+            if isinstance(task_id_set_b, bytes):
+                task_id_set_b = task_id_set_b.decode()
+            task_id_set = json.loads(task_id_set_b)
             if task_id in task_id_set:
                 raise ValueError(f"task_id: {task_id} already exists")
             task_id_set.append(task_id)
-            cache.set(self.cache_task_id, task_id_set)
-        print(f"#debug# task_id_set: {task_id_set}")
+            task_id_set_s = json.dumps(task_id_set)
+            cache.set(self.cache_task_id, task_id_set_s)
+        print(f"#debug# task_id_set: {task_id_set_s}")
         return task_id_set
 
     def empty_task_id(self) -> None:
-        cache.set(self.cache_task_id, None)
+        redis.set(self.cache_task_id, None)
 
-    def get_all_task_id(self) -> list:
+    def get_all_task_id(self) -> Union[bytes, str]:
         """
         获取所有task_id
         :return:
         """
-        return cache.get(self.cache_task_id)
+        rsp = redis.get(self.cache_task_id)
+        if isinstance(self.cache_task_id, bytes):
+            rsp = rsp.decode()
+        task_id_set = json.loads(rsp)
+        return task_id_set
 
     def get_updated_task_id(self) -> set:
         """
@@ -107,16 +123,22 @@ class Recorder:
         all_task_id = self.get_all_task_id()
         if all_task_id is None:
             return set()
+        all_task_id = json.loads(all_task_id)
         difference = self.cache_queue.symmetric_difference(set(all_task_id))
         self.cache_queue = set(all_task_id).copy()
         return difference
+
+    def empty_all(self):
+        redis.delete(self.cache_visited_id)
+        redis.delete(self.cache_task_id)
+        redis.delete(self.workflow_id)
 
 
 def register_crawler(func):
     def wrapper(self, *args, **kwargs):
         recorder = Recorder(self.param_base.workflow_id)
         task_obj = func(self, *args, **kwargs)
-        recorder.register_workflow_id(task_obj.id)
+        recorder.register_workflow_id(task_obj.id)  # 注册workflow_id, 当注册之后，便通过该id查询任务结果
         logger.success(f"Register workflow_id: {self.param_base.workflow_id}")
         return task_obj
 

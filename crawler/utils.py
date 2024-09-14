@@ -1,5 +1,21 @@
 from celery.result import AsyncResult
+from config.settings import settings
 from .celery import celery_app
+from redis import Redis
+
+
+def get_redis() -> Redis:
+    """
+    初始化Redis
+    :return:
+    """
+    redis_host = settings.redis_url.split("://")[1].split(":")[0]
+    redis_port = settings.redis_url.split(":")[2].split("/")[0]
+    redis_db = settings.redis_url.split("/")[-1]
+    return Redis(host=redis_host, port=redis_port, db=redis_db)
+
+
+redis = get_redis()
 
 
 def get_celery_result(task_id) -> dict:
@@ -20,7 +36,3 @@ def parse_url(domain: str, url: str) -> str:
     if url.startswith('http'):
         return url
     return domain + url
-
-
-if __name__ == '__main__':
-    get_celery_result('fc561de3-459d-4a70-a1b5-cd5e4b9a9975')

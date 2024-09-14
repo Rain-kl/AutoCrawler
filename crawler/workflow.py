@@ -54,6 +54,7 @@ class Workflow:
         recorder = Recorder(self.param_base.workflow_id)
         while True:
             time.sleep(2)
+            # 等待获取workflow的task_id, 这个task_id是主任务的task_id
             task_id = recorder.get_workflow_task_id()
             if task_id is not None:
                 break
@@ -79,10 +80,10 @@ class Workflow:
     def main(self):
         raise NotImplementedError("main method should be implemented in subclass")
 
-    def task_pipeline(self, task_id_set):
+    def task_pipeline(self, task_id_set: list):
         result_data_list = []
         for task_id in task_id_set:
-            result_data=get_celery_result(task_id)
+            result_data = get_celery_result(task_id)
             processed_data = self.data_processing(
                 ResponseModel.model_validate(result_data)
             )
