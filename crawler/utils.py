@@ -9,10 +9,18 @@ def get_redis() -> Redis:
     初始化Redis
     :return:
     """
-    redis_host = settings.redis_url.split("://")[1].split(":")[0]
-    redis_port = settings.redis_url.split(":")[2].split("/")[0]
-    redis_db = settings.redis_url.split("/")[-1]
-    return Redis(host=redis_host, port=redis_port, db=redis_db)
+    if '@' in settings.redis_url:
+        redis_host = settings.redis_url.split("@")[1].split(":")[0]
+        redis_port = settings.redis_url.split(":")[3].split("/")[0]
+        redis_db = settings.redis_url.split("/")[-1]
+        redis_user = settings.redis_url.split(":")[1].split("//")[1]
+        redis_passwd = settings.redis_url.split(":")[2].split("@")[0]
+        return Redis(host=redis_host, port=redis_port, db=redis_db, password=redis_passwd, username=redis_user)
+    else:
+        redis_host = settings.redis_url.split("://")[1].split(":")[0]
+        redis_port = settings.redis_url.split(":")[2].split("/")[0]
+        redis_db = settings.redis_url.split("/")[-1]
+        return Redis(host=redis_host, port=redis_port, db=redis_db)
 
 
 redis = get_redis()
