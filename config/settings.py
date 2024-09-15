@@ -1,6 +1,6 @@
 # config/settings.py
 import inspect
-
+import os
 from typing import Union
 from pydantic import AnyUrl, constr
 from pydantic_settings import BaseSettings
@@ -12,12 +12,29 @@ plugin_settings_classes = [
 ]  # 获取插件配置类
 
 
+def detect_workflow():
+    try:
+        crawler_listdir = os.listdir('./crawler')
+    except FileNotFoundError:
+        crawler_listdir = os.listdir('../crawler')
+    workflow_files = []
+    for file in crawler_listdir:
+        if file.startswith('wf_') and file.endswith('.py'):
+            file = file.replace('.py', '')
+            workflow_files.append('crawler.' + file)
+
+    return workflow_files
+
+
+celery_include: list = detect_workflow()
+
+
 class Settings(BaseSettings, *plugin_settings_classes):
     # HTTP 请求相关配置
     request_timeout: int = 10  # 请求超时时间（秒）
 
     # celery相关配置
-    celery_include: str = "crawler.myWorkflow"
+
     task_queue: constr(pattern=r'^(redis|rabbitmq)$') = "redis"
     redis_url: str = "redis://localhost:6379/0"
     rabbitmq_url: str = "amqp://guest:guest@localhost:5672/"

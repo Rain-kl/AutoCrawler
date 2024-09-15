@@ -1,5 +1,5 @@
 import celery
-from config.settings import settings
+from config.settings import settings, celery_include
 from celery.signals import task_postrun, task_failure
 
 if settings.task_queue == 'redis':
@@ -13,7 +13,7 @@ celery_app = celery.Celery(
     'tasks',
     broker=broker,
     backend=backend,
-    include=[settings.celery_include]
+    include=celery_include
 )
 
 celery_app.conf.update(

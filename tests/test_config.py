@@ -10,6 +10,7 @@ def test_config():
 
     assert isinstance(settings.task_queue, str)
 
+
 def test_logger():
     logger.info('info message')
     logger.error('error message')

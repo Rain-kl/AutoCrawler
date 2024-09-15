@@ -80,7 +80,7 @@ AutoCrawler 是一个 Apache2 许可的分布式的快速高级网络爬虫和�
 │   │   ├── crawler_error.log
 │   │   └── crawler_info.log
 │   ├── model.py
-│   ├── myWorkflow.py
+│   ├── wf_biquge.py
 │   ├── parser.py
 │   ├── recorder.py
 │   ├── requester.py
@@ -148,24 +148,37 @@ $ pip install -r requirements.txt
 进入`crawler`文件夹中，参照`workflow_example.py`编写自己的工作流
 
 ```python
+import celery.result
+from crawler.workflow import Workflow
+from crawler.recorder import register_crawler
+from crawler.celery import celery_app
+
 
 class WorkflowExample(Workflow):
-    def __init__(self, domain: str, start_path: str, end_path_regex: str):
-        super().__init__(domain, start_path, end_path_regex)
+  def __init__(self, domain: str, start_path: str, end_path_regex: str):
+    super().__init__(domain, start_path, end_path_regex)
 
-    @register_crawler
-    def main(self) -> celery.result.AsyncResult:
-        print(f"Start crawling from: {self.domain + self.start_path}")
-        param = self.param_base.model_copy(
-            update={
-                'tag': 'chapter',
-                'url_path': self.start_path
-            }
-        )
-        return step1.delay(param)
+  @register_crawler
+  def main(self) -> celery.result.AsyncResult:
+    print(f"Start crawling from: {self.domain + self.start_path}")
+    param = self.param_base.model_copy(
+      update={
+        'tag': 'chapter',
+        'url_path': self.start_path
+      }
+    )
+    return step1.delay(param)
 
-    def data_processing(self, data):
-        ...
+  def task_pipeline(self, task_id_set: list):
+    ...
+
+  def data_processing(self, data):
+    ...
+
+
+@celery_app.task(bind=True, max_retries=3, default_retry_delay=3)
+def step1(self, param):
+  ...
 ```
 首先继承`Workflow`类，然后实现`main`方法，`main`方法是工作流的入口，
 通过`register_crawler`装饰器注册爬虫任务。`main`方法返回一个`celery`任务对象。当这个任务标记完成时，表示任务分发完毕

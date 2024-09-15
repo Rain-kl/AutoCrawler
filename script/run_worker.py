@@ -16,6 +16,10 @@ load_dotenv()
 flower_port = os.getenv('FLOWER_PORT')
 flower_address = os.getenv('FLOWER_ADDRESS')
 
+worker_cmd = ['celery', '-A', 'crawler', 'worker', '--loglevel=info']
+flower_cmd = ['celery', '-A', 'crawler', 'flower', f'--port={flower_port}',
+              f'--address={flower_address}']
+
 
 def print_info():
     table = Table(title="", box=None, width=61)
@@ -51,12 +55,8 @@ def print_info():
     )
 
 
-def start_celery_worker_and_flower(workdir, celery_module):
+def start_celery_worker_and_flower(workdir):
     os.chdir(workdir)
-
-    worker_cmd = ['celery', '-A', celery_module, 'worker', '--loglevel=info']
-    flower_cmd = ['celery', '-A', celery_module, 'flower', f'--port={flower_port}',
-                  f'--address={flower_address}']
 
     worker_process = subprocess.Popen(worker_cmd)
     flower_process = subprocess.Popen(flower_cmd)
@@ -75,9 +75,7 @@ def cleanup(worker_process, flower_process):
 
 def main():
     workdir = './'
-    celery_module = "crawler"
-
-    worker_process, flower_process = start_celery_worker_and_flower(workdir, celery_module)
+    worker_process, flower_process = start_celery_worker_and_flower(workdir)
 
     # def signal_handler(sig, frame):
     #     cleanup(worker_process, flower_process)

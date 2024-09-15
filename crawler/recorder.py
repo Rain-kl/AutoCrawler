@@ -104,7 +104,7 @@ class Recorder:
     def empty_task_id(self) -> None:
         redis.set(self.cache_task_id, None)
 
-    def get_all_task_id(self) -> Union[bytes, str]:
+    def get_all_task_id(self) -> list:
         """
         获取所有task_id
         :return:
