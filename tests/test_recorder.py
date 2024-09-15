@@ -24,10 +24,11 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(rsp)
 
     def test_record_task_id(self):
-        task_id = "test_task_id"
-        self.recorder.record_task_id(task_id)
+        task_id = ['task_id1', 'task_id2', 'task_id3']
+        for tid in task_id:
+            self.recorder.record_task_id(tid)
         rsp = self.recorder.get_all_task_id()
-        self.assertEqual(rsp[0], task_id)
+        self.assertEqual(task_id, rsp)
 
 
 if __name__ == '__main__':

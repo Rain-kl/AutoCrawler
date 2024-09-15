@@ -97,12 +97,9 @@ class Recorder:
                 raise ValueError(f"task_id: {task_id} already exists")
             task_id_set.append(task_id)
             task_id_set_s = json.dumps(task_id_set)
-            cache.set(self.cache_task_id, task_id_set_s)
+            redis.set(self.cache_task_id, task_id_set_s)
         print(f"#debug# task_id_set: {task_id_set_s}")
         return task_id_set
-
-    def empty_task_id(self) -> None:
-        redis.set(self.cache_task_id, None)
 
     def get_all_task_id(self) -> list:
         """
@@ -112,6 +109,8 @@ class Recorder:
         rsp = redis.get(self.cache_task_id)
         if isinstance(self.cache_task_id, bytes):
             rsp = rsp.decode()
+        if rsp is None:
+            return []
         task_id_set = json.loads(rsp)
         return task_id_set
 
@@ -123,7 +122,6 @@ class Recorder:
         all_task_id = self.get_all_task_id()
         if all_task_id is None:
             return set()
-        all_task_id = json.loads(all_task_id)
         difference = self.cache_queue.symmetric_difference(set(all_task_id))
         self.cache_queue = set(all_task_id).copy()
         return difference
