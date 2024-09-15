@@ -3,3 +3,6 @@
 /.idea/
 /.cache/
 /logs/
+/tests/.cache/
+/tests/logs/
+/tests/.env
