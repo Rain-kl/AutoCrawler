@@ -47,18 +47,7 @@ class Recorder:
         :param url:
         :return:
         """
-        result = redis.get(self.cache_visited_id)
-        if result is None:
-            url_set = [url]
-            url_set_s = json.dumps(url_set)
-            redis.set(self.cache_visited_id, url_set_s)
-        else:
-            if isinstance(result, bytes):
-                result = result.decode()
-            json_data: list = json.loads(result)
-            json_data.append(url)
-            result = json.dumps(json_data)
-            redis.set(self.cache_visited_id, result)
+        redis.sadd(self.cache_visited_id, url)
 
     def assert_visited_url(self, url):
         """
@@ -66,15 +55,9 @@ class Recorder:
         :param url:
         :return:
         """
-        result = redis.get(self.cache_visited_id)
-        if result is None:
-            return False
-        if isinstance(result, bytes):
-            result = result.decode()
-        json_data: list = json.loads(result)
-        return url in json_data
+        return redis.sismember(self.cache_visited_id, url)
 
-    def record_task_id(self, task_id: str) -> list:
+    def record_task_id(self, task_id: str) -> None:
         """
         记录task_id
         :param task_id:
@@ -83,36 +66,24 @@ class Recorder:
         print(f"#debug# task_id: {task_id}")
         if not isinstance(task_id, str):
             raise ValueError("task_id should be str")
-        task_id_set_b: Union[bytes, str] = redis.get(self.cache_task_id)
-        if task_id_set_b is None:
-            task_id_set = list()
-            task_id_set.append(task_id)
-            task_id_set_s = json.dumps(task_id_set)
-            redis.set(self.cache_task_id, task_id_set_s)
-        else:
-            if isinstance(task_id_set_b, bytes):
-                task_id_set_b = task_id_set_b.decode()
-            task_id_set = json.loads(task_id_set_b)
-            if task_id in task_id_set:
-                raise ValueError(f"task_id: {task_id} already exists")
-            task_id_set.append(task_id)
-            task_id_set_s = json.dumps(task_id_set)
-            redis.set(self.cache_task_id, task_id_set_s)
-        print(f"#debug# task_id_set: {task_id_set_s}")
-        return task_id_set
+
+        task_id_list = redis.lrange(self.cache_task_id, 0, -1)
+        task_id_list = [item.decode() if isinstance(item, bytes) else item for item in task_id_list]
+
+        if task_id in task_id_list:
+            raise ValueError(f"task_id: {task_id} already exists")
+
+        redis.rpush(self.cache_task_id, task_id)
+        task_id_list.append(task_id)
 
     def get_all_task_id(self) -> list:
         """
         获取所有task_id
         :return:
         """
-        rsp = redis.get(self.cache_task_id)
-        if isinstance(self.cache_task_id, bytes):
-            rsp = rsp.decode()
-        if rsp is None:
-            return []
-        task_id_set = json.loads(rsp)
-        return task_id_set
+        task_id_set = redis.smembers(self.cache_task_id)
+        task_id_list = [task_id.decode() if isinstance(task_id, bytes) else task_id for task_id in task_id_set]
+        return task_id_list
 
     def get_updated_task_id(self) -> set:
         """
@@ -120,9 +91,7 @@ class Recorder:
         :return:
         """
         all_task_id = self.get_all_task_id()
-        if all_task_id is None:
-            return set()
-        difference = self.cache_queue.symmetric_difference(set(all_task_id))
+        difference = set(all_task_id).difference(self.cache_queue)
         self.cache_queue = set(all_task_id).copy()
         return difference
 
