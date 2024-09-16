@@ -2,6 +2,13 @@ import unittest
 import time
 
 from crawler.recorder import Recorder
+from crawler.utils import redis
+
+
+def test_redis_connection():
+    redis.set('test', 'test')
+    rsp = redis.get('test')
+    assert rsp == b'test'
 
 
 class TestRecorder(unittest.TestCase):
