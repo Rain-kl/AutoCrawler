@@ -81,8 +81,8 @@ class Recorder:
         获取所有task_id
         :return:
         """
-        task_id_set = redis.smembers(self.cache_task_id)
-        task_id_list = [task_id.decode() if isinstance(task_id, bytes) else task_id for task_id in task_id_set]
+        task_id_list = redis.lrange(self.cache_task_id, 0, -1)
+        task_id_list = [item.decode() if isinstance(item, bytes) else item for item in task_id_list]
         return task_id_list
 
     def get_updated_task_id(self) -> set:
@@ -92,7 +92,7 @@ class Recorder:
         """
         all_task_id = self.get_all_task_id()
         difference = set(all_task_id).difference(self.cache_queue)
-        self.cache_queue = set(all_task_id).copy()
+        self.cache_queue = all_task_id.copy()
         return difference
 
     def empty_all(self):

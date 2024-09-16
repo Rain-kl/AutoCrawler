@@ -4,7 +4,7 @@ import time
 from crawler.recorder import Recorder
 
 
-class MyTestCase(unittest.TestCase):
+class TestRecorder(unittest.TestCase):
     def setUp(self):
         time_hex = hex(int(time.time()))[2:]
         self.recorder = Recorder(time_hex)
