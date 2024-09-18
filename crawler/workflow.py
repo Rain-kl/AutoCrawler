@@ -64,7 +64,6 @@ class Workflow(ABC):
             stop_flag = recorder.get_stop_flag()
             if stop_flag:
                 break
-
         logger.info("workflow stopped")
         self.stop_event.set()  # Signal threads to stop
 
@@ -82,7 +81,7 @@ class Workflow(ABC):
             time.sleep(1)
             task_id_set = recorder.get_updated_task_id()
             if task_id_set:
-                print(f"task_id: {task_id_set}\nlen: {len(task_id_set)}")
+                logger.debug(f"task_id_set: {task_id_set}")
                 self.executor.submit(self.task_pipeline, task_id_set)
         self.executor.shutdown(wait=True)  # Wait for threads to finish
 
