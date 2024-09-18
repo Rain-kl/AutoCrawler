@@ -87,7 +87,7 @@ AutoCrawler 是一个 Apache2 许可的分布式的快速高级网络爬虫和�
 │   ├── scheduler.py
 │   ├── utils.py
 │   ├── workflow.py
-│   └── workflow_example.py
+│   └── example_workflow.py
 ├── data
 │   ├── __init__.py
 │   ├── loader.py
@@ -145,7 +145,8 @@ $ pip install -r requirements.txt
 
 ### 2， 工作流开发
 
-进入`crawler`文件夹中，参照`workflow_example.py`编写自己的工作流
+进入`workflow`文件夹中，参照`workflow_example.py`编写自己的工作流
+工作流文件必须以`wf_`开头，例如`wf_biquge.py`，并且继承`Workflow`类
 
 ```python
 import celery.result

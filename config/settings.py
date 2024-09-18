@@ -14,14 +14,14 @@ plugin_settings_classes = [
 
 def detect_workflow():
     try:
-        crawler_listdir = os.listdir('./crawler')
+        crawler_listdir = os.listdir('./workflow')
     except FileNotFoundError:
-        crawler_listdir = os.listdir('../crawler')
+        crawler_listdir = os.listdir('../workflow')
     workflow_files = []
     for file in crawler_listdir:
         if file.startswith('wf_') and file.endswith('.py'):
             file = file.replace('.py', '')
-            workflow_files.append('crawler.' + file)
+            workflow_files.append('workflow.' + file)
 
     return workflow_files
 

@@ -2,10 +2,7 @@ fastapi
 uvicorn
 pydantic
 pydantic-settings
-colorama
 requests
-beautifulsoup4
-tenacity
 pytest
 pytest-asyncio
 httpx
@@ -19,4 +16,4 @@ celery
 flower  # celery monitoring
 python-dotenv  # .env file support
 rich
-eventlet
+eventlet  # for windows10 celery worker

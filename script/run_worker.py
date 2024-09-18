@@ -16,7 +16,7 @@ load_dotenv()
 flower_port = os.getenv('FLOWER_PORT')
 flower_address = os.getenv('FLOWER_ADDRESS')
 
-worker_cmd = ['celery', '-A', 'crawler', 'worker', '--loglevel=info']
+worker_cmd = ['celery', '-A', 'crawler', 'worker']
 flower_cmd = ['celery', '-A', 'crawler', 'flower', f'--port={flower_port}',
               f'--address={flower_address}']
 

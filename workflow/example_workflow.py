@@ -1,15 +1,15 @@
-# crawler/workflow_example.py
+# workflow/example_workflow.py
 import celery.result
 
 from config.logging_config import logger
 from data.loader import DataLoader, TextLoader
 from data.processor import TextProcessor
-from .celery import celery_app
-from .model import Param, ResponseModel
-from .recorder import Recorder
-from .recorder import register_crawler
+from crawler.celery import celery_app
+from crawler.model import Param, ResponseModel
+from crawler.recorder import Recorder
+from crawler.recorder import register_crawler
 # from celery.utils.log import get_task_logger
-from .workflow import Workflow
+from crawler.workflow import Workflow
 
 
 class WorkflowExample(Workflow):
