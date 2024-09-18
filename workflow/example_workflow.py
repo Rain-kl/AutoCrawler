@@ -1,20 +1,33 @@
-# workflow/example_workflow.py
+# workflow/workflow.py
 import celery.result
+from celery.exceptions import Ignore
 
-from config.logging_config import logger
-from data.loader import DataLoader, TextLoader
-from data.processor import TextProcessor
-from crawler.celery import celery_app
-from crawler.model import Param, ResponseModel
-from crawler.recorder import Recorder
-from crawler.recorder import register_crawler
 # from celery.utils.log import get_task_logger
+from config.logging_config import logger
+from crawler.celery import celery_app
+from crawler.model import ResponseModel, Param
+from crawler.parser import Parser
+from crawler.recorder import Recorder, register_crawler
+from crawler.requester import requester
 from crawler.workflow import Workflow
+from data.loader import TextLoader
+from data.processor import TextProcessor
 
 
-class WorkflowExample(Workflow):
+# logger = get_task_logger(__name__)
+class CustomizeLoader(TextLoader):
+    def __init__(self):
+        super().__init__()
+
+
+class MyWorkflow(Workflow):
     def __init__(self, domain: str, start_path: str, end_path_regex: str):
-        super().__init__(domain, start_path, end_path_regex)
+        super().__init__(
+            domain=domain,
+            start_path=start_path,
+            end_path_regex=end_path_regex,
+            data_loader=CustomizeLoader()
+        )
 
     @register_crawler
     def main(self) -> celery.result.AsyncResult:
@@ -27,12 +40,9 @@ class WorkflowExample(Workflow):
         )
         return step1.delay(param)
 
-    def data_processing(self, data) -> ResponseModel:
+    def data_processing(self, data: ResponseModel) -> ResponseModel:
         print(data)
         return data
-
-    def data_loader(self) -> DataLoader:
-        return TextLoader()
 
     def data_storage(self, data_processor: TextProcessor, data: [ResponseModel]):
         data_processor.save_txt("save.txt")
@@ -52,6 +62,7 @@ def step1(self, params: Param):
         step2.delay(params)
         recorder.record_visited_url(params.url)
         ...
+        recorder.set_stop_flag(1)
         return ResponseModel(tag=params.workflow_id, response='success')
     except Exception as exc:
         self.retry(exc=exc)

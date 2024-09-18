@@ -62,7 +62,7 @@ class Workflow(ABC):
             time.sleep(2)
             # 等待获取workflow的task_id, 这个task_id是主任务的task_id
             stop_flag = recorder.get_stop_flag()
-            if stop_flag is not None:
+            if stop_flag:
                 break
 
         logger.info("workflow stopped")
