@@ -1,22 +1,24 @@
 #!/usr/bin/env python
 
+import itertools
 import os
 import subprocess
 import threading
 
-from loguru import logger
 from dotenv import load_dotenv
+from loguru import logger
 from rich import print
 from rich.panel import Panel
 from rich.table import Table
-import itertools
 
 load_dotenv()
 
 flower_port = os.getenv('FLOWER_PORT')
 flower_address = os.getenv('FLOWER_ADDRESS')
+num_cores = os.cpu_count()
+concurrency_num = int(num_cores / 2) if num_cores > 2 else 1
 
-worker_cmd = ['celery', '-A', 'crawler', 'worker']
+worker_cmd = ['celery', '-A', 'crawler', 'worker', '-c', f'{concurrency_num}', '--loglevel=INFO']
 flower_cmd = ['celery', '-A', 'crawler', 'flower', f'--port={flower_port}',
               f'--address={flower_address}']
 

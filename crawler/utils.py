@@ -39,8 +39,3 @@ def get_celery_result(task_id) -> dict:
         elif result.failed():
             return result.traceback
 
-
-def parse_url(domain: str, url: str) -> str:
-    if url.startswith('http'):
-        return url
-    return domain + url

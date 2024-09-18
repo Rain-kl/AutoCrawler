@@ -17,7 +17,6 @@ def AutoProcessor(loader: Union[DataLoader, TextLoader]):
 class DataProcessor:
     def __init__(self, loader: Union[DataLoader, TextLoader]):
         self.loader = loader
-        self.text = TextProcessor(loader)
 
 
 class TextProcessor:

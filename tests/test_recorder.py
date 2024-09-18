@@ -34,8 +34,22 @@ class TestRecorder(unittest.TestCase):
         task_id = ['task_id1', 'task_id2', 'task_id3']
         for tid in task_id:
             self.recorder.record_task_id(tid)
+
+        updated = self.recorder.get_updated_task_id()
+        self.assertEqual(task_id, updated)
+
+        self.recorder.record_task_id("task_id4")
+        updated = self.recorder.get_updated_task_id()
+        self.assertNotEqual(task_id, updated)
+
         rsp = self.recorder.get_all_task_id()
+        task_id.append("task_id4")
         self.assertEqual(task_id, rsp)
+
+    def test_stop_flag(self):
+        self.recorder.set_stop_flag(1)
+        rsp = self.recorder.get_stop_flag()
+        self.assertTrue(rsp)
 
 
 if __name__ == '__main__':

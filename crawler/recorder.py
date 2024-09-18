@@ -1,9 +1,8 @@
 # crawler/recorder.py
 import json
-from typing import Union
+from collections import OrderedDict
 
 from config.logging_config import logger
-from .decorator import cache
 from .utils import redis
 
 
@@ -18,6 +17,7 @@ class Recorder:
         self.workflow_id: str = workflow_id
         self.cache_visited_id: str = f"visited-{self.workflow_id}"
         self.cache_task_id: str = f"task-{self.workflow_id}"
+        self.stop_flag: str = f"{self.workflow_id}_stop"
         self.cache_queue: set = set()
 
     def register_workflow_id(self, task_id):
@@ -40,6 +40,31 @@ class Recorder:
         if isinstance(result, bytes):
             result = result.decode()
         return result
+
+    def set_stop_flag(self, flag: int) -> None:
+        """
+        设置停止标志
+        :param flag:
+        :return:
+        """
+        if flag not in [0, 1]:
+            raise ValueError("flag should be 0 or 1")
+        redis.set(self.stop_flag, json.dumps(flag))
+
+    def get_stop_flag(self) -> bool:
+        """
+        获取停止标志
+        :return:
+        """
+        result = redis.get(self.stop_flag)
+        if result is not None:
+            result = json.loads(result)
+            if result == 1:
+                return True
+            else:
+                return False
+        else:
+            return False
 
     def record_visited_url(self, url):
         """
@@ -85,13 +110,14 @@ class Recorder:
         task_id_list = [item.decode() if isinstance(item, bytes) else item for item in task_id_list]
         return task_id_list
 
-    def get_updated_task_id(self) -> set:
+    def get_updated_task_id(self) -> list:
         """
         每一次调会获取全部task_id, 并与上一次的task_id做差集，返回差集，为新增的task_id
         :return:
         """
         all_task_id = self.get_all_task_id()
-        difference = set(all_task_id).difference(self.cache_queue)
+        # 使用 OrderedDict 来保持顺序
+        difference = list(OrderedDict.fromkeys(id_ for id_ in all_task_id if id_ not in self.cache_queue))
         self.cache_queue = all_task_id.copy()
         return difference
 

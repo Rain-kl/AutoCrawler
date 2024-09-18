@@ -2,6 +2,8 @@
 import random
 import threading
 import time
+from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
 from hashlib import md5
 from config.logging_config import logger
 from data.loader import DataLoader
@@ -11,12 +13,14 @@ from .recorder import Recorder
 from .utils import get_celery_result
 
 
-class Workflow:
+class Workflow(ABC):
     def __init__(
             self,
+            *,
             domain: str,
             start_path: str,
             end_path_regex: str,
+            data_loader: DataLoader
             # work_type="text",
     ):
         self.stop_event = threading.Event()  # 用于停止线程
@@ -40,6 +44,8 @@ class Workflow:
             }
         )
         self.wait_flag = 0
+        self.data_loader: DataLoader = data_loader
+        self.executor = ThreadPoolExecutor(max_workers=10)  # Adjust max_workers as necessary
         print(f"Workflow ID: {self.param_base.workflow_id}")
 
     def start(self):
@@ -55,15 +61,16 @@ class Workflow:
         while True:
             time.sleep(2)
             # 等待获取workflow的task_id, 这个task_id是主任务的task_id
-            task_id = recorder.get_workflow_task_id()
-            if task_id is not None:
+            stop_flag = recorder.get_stop_flag()
+            if stop_flag is not None:
                 break
 
-        logger.info(get_celery_result(task_id))
-        time.sleep(1)
+        logger.info("workflow stopped")
         self.stop_event.set()  # Signal threads to stop
-        task_id_set = recorder.get_all_task_id()
-        self.task_pipeline(task_id_set)
+
+    @abstractmethod
+    def main(self):
+        raise NotImplementedError("main method should be implemented in subclass")
 
     def wait_result(self):
         """
@@ -76,9 +83,8 @@ class Workflow:
             task_id_set = recorder.get_updated_task_id()
             if task_id_set:
                 print(f"task_id: {task_id_set}\nlen: {len(task_id_set)}")
-
-    def main(self):
-        raise NotImplementedError("main method should be implemented in subclass")
+                self.executor.submit(self.task_pipeline, task_id_set)
+        self.executor.shutdown(wait=True)  # Wait for threads to finish
 
     def task_pipeline(self, task_id_set: list):
         result_data_list = []
@@ -89,14 +95,11 @@ class Workflow:
             )
             result_data_list.append(processed_data)
 
-        data_loader = self.data_loader()
-        data_loader.load(result_data_list)
-        data_processor = AutoProcessor(data_loader)
+        self.data_loader.load(result_data_list)
+        data_processor = AutoProcessor(self.data_loader)
         self.data_storage(data_processor, result_data_list)
 
-    def data_loader(self) -> DataLoader:
-        raise NotImplementedError("data_loader method should be implemented in subclass")
-
+    @abstractmethod
     def data_storage(self, data_processor: DataProcessor, data: [ResponseModel]):
         raise NotImplementedError("data_storage method should be implemented in subclass")
 

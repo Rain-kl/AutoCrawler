@@ -23,6 +23,7 @@ celery_app.conf.update(
     timezone='Asia/Shanghai',
     enable_utc=True,
     worker_hijack_root_logger=False,  # 避免Celery接管根logger
+    result_expires=3600,  # 任务结果过期时间10分钟
 )
 
 
